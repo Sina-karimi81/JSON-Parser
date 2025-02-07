@@ -8,7 +8,7 @@ public class JsonMapper {
         }
 
         StringBuilder json = new StringBuilder();
-        json.append("{").append("\n");
+        json.append("{");
 
         // some other processing
         String convertedResult = Convertor.writeAsString(object);

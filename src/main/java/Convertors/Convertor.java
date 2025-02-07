@@ -5,7 +5,9 @@ import java.util.*;
 
 public abstract class Convertor {
 
-    private static final Map<FieldType, Convertor> CONVERTORS = Map.of(FieldType.PRIMITIVE, new PrimitiveTypeConvertor());
+    static String appendElement(Field field) {
+        return "\"" + field.getName() + "\"";
+    }
 
     public static <T> String writeAsString(T object) {
         StringBuilder result = new StringBuilder();
@@ -18,25 +20,23 @@ public abstract class Convertor {
 
             Convertor convertor = getConvertor(field);
             if (convertor == null) {
-                throw new IllegalArgumentException("cannot convert the given field of the input due to not being supported: " + field.getName());
+                throw new IllegalArgumentException("cannot convert the given field of the input due to type not being supported: " + field.getName());
             }
 
             convertor.convert(object, field, result);
 
             if (iterator.hasNext()) {
-                result.append(",").append("\n");
+                result.append(",");
             }
-        }
-
-        if (!result.isEmpty()) {
-            result.append("\n");
         }
         return result.toString();
     }
 
     private static Convertor getConvertor(Field field) {
         if (field.getType().isPrimitive()) {
-            return CONVERTORS.get(FieldType.PRIMITIVE);
+            return FieldType.PRIMITIVE.getConvertor();
+        } else if (field.getType().isArray()) {
+            return FieldType.ARRAY.getConvertor();
         }
 
         return null;
