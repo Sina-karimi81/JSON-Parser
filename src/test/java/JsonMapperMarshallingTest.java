@@ -1,4 +1,5 @@
 import TestObjects.ArrayTypes;
+import TestObjects.CollectionTypes;
 import TestObjects.CompoundTypes;
 import TestObjects.PrimitiveTypes;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,13 +11,16 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JsonMapperMarshallingTest {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    // TODO: add tests for Date data type
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test
     public void testObject2JsonConversion() {
@@ -40,7 +44,7 @@ public class JsonMapperMarshallingTest {
             "34, false, 6.789f",
             "34, true, 0.0f",
     })
-    public void testObject2JsonPrimitiveTypeConversion(int someInt, boolean someBool, float someFloat) throws JsonProcessingException {
+    public void testObject2JsonWithPrimitiveTypeConversion(int someInt, boolean someBool, float someFloat) throws JsonProcessingException {
         PrimitiveTypes primitiveTypes = new PrimitiveTypes(someInt, someBool, someFloat);
 
         String json = JsonMapper.json(primitiveTypes);
@@ -52,7 +56,7 @@ public class JsonMapperMarshallingTest {
 
     @ParameterizedTest(name = "Iteration #{index} -> ints = {0}, booleans = {1} and floats value is {2}")
     @MethodSource(value = "JsonMapperMarshallingTest#arrayDataProvider")
-    public void testObject2JsonArrayConversion(int[] someInts, boolean[] someBools, float[] someFloats) throws JsonProcessingException {
+    public void testObject2JsonWithArrayConversion(int[] someInts, boolean[] someBools, float[] someFloats) throws JsonProcessingException {
         ArrayTypes arrayTypes = new ArrayTypes();
         arrayTypes.setSomeInts(someInts);
         arrayTypes.setSomeBools(someBools);
@@ -76,7 +80,7 @@ public class JsonMapperMarshallingTest {
 
     @ParameterizedTest(name = "Iteration #{index} -> arrays = {0}, primitives = {1}")
     @MethodSource(value = "JsonMapperMarshallingTest#compoundDataProvider")
-    public void testObject2JsonCompoundConversion(ArrayTypes arrayTypes, PrimitiveTypes primitiveTypes) throws JsonProcessingException {
+    public void testObject2JsonWithCompoundConversion(ArrayTypes arrayTypes, PrimitiveTypes primitiveTypes) throws JsonProcessingException {
         CompoundTypes compoundTypes = new CompoundTypes();
         compoundTypes.setSomeInts(arrayTypes.getSomeInts());
         compoundTypes.setSomeBools(arrayTypes.getSomeBools());
@@ -94,14 +98,54 @@ public class JsonMapperMarshallingTest {
 
     private static Stream<Arguments> compoundDataProvider() {
         return Stream.of(
-                Arguments.of(new ArrayTypes(new int[] {1,2,3,4}, new boolean[] {true, false}, new float[] {1.43f, 16.4324f}),
-                        new PrimitiveTypes(34, true, 13.44f)),
-                Arguments.of(new ArrayTypes(null, new boolean[] {true, false}, new float[] {1.43f, 16.4324f}),
-                        new PrimitiveTypes(0 , true, 13.44f)),
-                Arguments.of(new ArrayTypes(new int[] {1,2,3,4}, null, new float[] {1.43f, 16.4324f}),
-                        new PrimitiveTypes(13 , false, 13.44f)),
-                Arguments.of(new ArrayTypes(new int[] {1,2,3,4}, new boolean[] {true, false}, null),
-                        new PrimitiveTypes(0 , true, 0.0f))
+                Arguments.of(
+                        new ArrayTypes(new int[] {1,2,3,4}, new boolean[] {true, false}, new float[] {1.43f, 16.4324f}),
+                        new PrimitiveTypes(34, true, 13.44f)
+                ),
+                Arguments.of(
+                        new ArrayTypes(null, new boolean[] {true, false}, new float[] {1.43f, 16.4324f}),
+                        new PrimitiveTypes(0 , true, 13.44f)
+                ),
+                Arguments.of(
+                        new ArrayTypes(new int[] {1,2,3,4}, null, new float[] {1.43f, 16.4324f}),
+                        new PrimitiveTypes(13 , false, 13.44f)
+                ),
+                Arguments.of(
+                        new ArrayTypes(new int[] {1,2,3,4}, new boolean[] {true, false}, null),
+                        new PrimitiveTypes(0 , true, 0.0f)
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "Iteration #{index} -> collection = {0}, Map = {1}, Set = {2}, Queue = {3}")
+    @MethodSource(value = "JsonMapperMarshallingTest#collectionDataProvider")
+    public void testObject2JsonWithCollectionTypesConversion(List<String> list, Map<String, Integer> map, Set<Integer> set, Queue<Integer> queue) throws JsonProcessingException {
+        CollectionTypes collectionTypes = new CollectionTypes(list, map, set, queue);
+
+        String json = JsonMapper.json(collectionTypes);
+
+        String expected = mapper.writeValueAsString(collectionTypes);
+        assertNotNull(json, "JSON string should not be null");
+        assertEquals(expected, json, "the output did not match the expected result");
+    }
+
+    private static Stream<Arguments> collectionDataProvider() {
+        List<String> testList = new ArrayList<>();
+        testList.add("test");
+        testList.add(null);
+
+        Map<String, Integer> testMap = new HashMap<>();
+        testMap.put("key1", 69);
+        testMap.put("420", null);
+
+        return Stream.of(
+                Arguments.of(List.of("test1", "test2", "test23"), Map.of("key1", 1, "key2",  2), null, null),
+                Arguments.of(null, Map.of("key1", 1, "key2",  2), null, null),
+                Arguments.of(List.of("test1", "test2", "test23"), null, null, null),
+                Arguments.of(List.of(), Map.of(), null, null),
+                Arguments.of(testList, testMap, null, null),
+                Arguments.of(null, null, Set.of(1,2,3,4), new PriorityQueue<>(Set.of(1,2,3,4))),
+                Arguments.of(testList, testMap, Set.of(1,2,3,4), new PriorityQueue<>(Set.of(1,2,3,4)))
         );
     }
 

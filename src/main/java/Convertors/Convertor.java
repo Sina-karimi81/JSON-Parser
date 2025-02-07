@@ -5,8 +5,16 @@ import java.util.*;
 
 public abstract class Convertor {
 
-    static String appendElement(Field field) {
+    protected String appendElement(Field field) {
         return "\"" + field.getName() + "\"";
+    }
+
+    protected boolean checkForStringType(Object value) {
+        return value instanceof String;
+    }
+
+    protected boolean checkForDateType(Object value) {
+        return value instanceof Date;
     }
 
     public static <T> String writeAsString(T object) {
@@ -37,6 +45,8 @@ public abstract class Convertor {
             return FieldType.PRIMITIVE.getConvertor();
         } else if (field.getType().isArray()) {
             return FieldType.ARRAY.getConvertor();
+        } else if (Collection.class.isAssignableFrom(field.getType()) || Map.class.isAssignableFrom(field.getType())) {
+            return FieldType.COLLECTION.getConvertor();
         }
 
         return null;
