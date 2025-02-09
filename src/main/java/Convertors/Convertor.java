@@ -19,25 +19,40 @@ public abstract class Convertor {
 
     public static <T> String writeAsString(T object) {
         StringBuilder result = new StringBuilder();
-        Field[] declaredFields = object.getClass().getDeclaredFields();
+        if (!checkForObjectType(object)) {
+            Field[] declaredFields = object.getClass().getDeclaredFields();
 
-        Iterator<Field> iterator = Arrays.stream(declaredFields).iterator();
-        while (iterator.hasNext()) {
-            Field field = iterator.next();
-            field.setAccessible(true);
+            result.append("{");
+            Iterator<Field> iterator = Arrays.stream(declaredFields).iterator();
+            while (iterator.hasNext()) {
+                Field field = iterator.next();
+                field.setAccessible(true);
 
-            Convertor convertor = getConvertor(field);
-            if (convertor == null) {
-                throw new IllegalArgumentException("cannot convert the given field of the input due to type not being supported: " + field.getName());
+                Convertor convertor = getConvertor(field);
+                if (convertor == null) {
+                    throw new IllegalArgumentException("cannot convert the given field of the input due to type not being supported: " + field.getName());
+                }
+
+                convertor.convert(object, field, result);
+
+                if (iterator.hasNext()) {
+                    result.append(",");
+                }
             }
-
-            convertor.convert(object, field, result);
-
-            if (iterator.hasNext()) {
-                result.append(",");
+            result.append("}");
+        } else {
+            if (object.getClass().isArray()) {
+                FieldType.ARRAY.getConvertor().convert(object, null, result);
+            } else {
+                FieldType.COLLECTION.getConvertor().convert(object, null, result);
             }
         }
+
         return result.toString();
+    }
+
+    private static boolean checkForObjectType(Object object) {
+        return object.getClass().isArray() || object instanceof Collection<?> || object instanceof Map<?,?>;
     }
 
     private static Convertor getConvertor(Field field) {

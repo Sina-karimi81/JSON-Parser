@@ -9,6 +9,12 @@ public class ArrayTypeConvertor extends Convertor {
 
     @Override
     public <T> void convert(T object, Field field, StringBuilder json) {
+        if (field == null) {
+            String arrayString = createArrayString(object);
+            json.append(arrayString);
+            return;
+        }
+
         try {
             json.append(appendElement(field))
                     .append(":")
@@ -28,10 +34,17 @@ public class ArrayTypeConvertor extends Convertor {
 
         for (int i = 0; i < Array.getLength(input); i++) {
             Object o = Array.get(input, i);
+            if (checkForStringType(o)) {
+                o = "\"" + o + "\"";
+            }
             result.append(o).append(",");
         }
 
-        result.deleteCharAt(result.length()-1).append("]");
+        if (Array.getLength(input) != 0) {
+            result.deleteCharAt(result.length()-1);
+        }
+
+        result.append("]");
 
         return result.toString();
     }

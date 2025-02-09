@@ -1,7 +1,4 @@
-import TestObjects.ArrayTypes;
-import TestObjects.CollectionTypes;
-import TestObjects.CompoundTypes;
-import TestObjects.PrimitiveTypes;
+import TestObjects.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -33,8 +30,12 @@ public class JsonMapperMarshallingTest {
     }
 
     @Test
-    public void testObject2JsonConversion_NullObjects() {
-        assertThrows(IllegalArgumentException.class, () -> JsonMapper.json(null));
+    public void testObject2JsonConversion_NullObjects() throws JsonProcessingException {
+        String json = JsonMapper.json(null);
+
+        String expected = mapper.writeValueAsString(null);
+        assertNotNull(json, "JSON string should not be null");
+        assertEquals(expected, json, "the output did not match the expected result");
     }
 
     @ParameterizedTest(name = "Iteration #{index} -> int = {0}, boolean = {1} and float value is {2}")
@@ -55,7 +56,7 @@ public class JsonMapperMarshallingTest {
     }
 
     @ParameterizedTest(name = "Iteration #{index} -> ints = {0}, booleans = {1} and floats value is {2}")
-    @MethodSource(value = "JsonMapperMarshallingTest#arrayDataProvider")
+    @MethodSource(value = "objectArrayDataProvider")
     public void testObject2JsonWithArrayConversion(int[] someInts, boolean[] someBools, float[] someFloats) throws JsonProcessingException {
         ArrayTypes arrayTypes = new ArrayTypes();
         arrayTypes.setSomeInts(someInts);
@@ -69,12 +70,66 @@ public class JsonMapperMarshallingTest {
         assertEquals(expected, json, "the output did not match the expected result");
     }
 
-    private static Stream<Arguments> arrayDataProvider() {
+    private static Stream<Arguments> objectArrayDataProvider() {
         return Stream.of(
                 Arguments.of(new int[] {1,2,3,4}, new boolean[] {true, false}, new float[] {1.43f, 16.4324f}),
                 Arguments.of(null, new boolean[] {true, false}, new float[] {1.43f, 16.4324f}),
                 Arguments.of(new int[] {1,2,3,4}, null, new float[] {1.43f, 16.4324f}),
                 Arguments.of(new int[] {1,2,3,4}, new boolean[] {true, false}, null)
+        );
+    }
+
+    @ParameterizedTest(name = "Iteration #{index} -> array = {0}")
+    @MethodSource(value = "arrayDataProvider")
+    public void testArray2JsonConversion(Container<?> arrayContainer) throws JsonProcessingException {
+        String json = JsonMapper.json(arrayContainer.getData());
+
+        String expected = mapper.writeValueAsString(arrayContainer.getData());
+        assertNotNull(json, "JSON string should not be null");
+        assertEquals(expected, json, "the output did not match the expected result");
+    }
+
+    private static Stream<Arguments> arrayDataProvider() {
+        int[] ints = {1,2,3,4};
+        boolean[] booleans = {true , false};
+        String[] strings = {"test1", "test2", "test3"};
+        float[] floats = {1.43f, 16.4324f};
+
+        return Stream.of(
+                Arguments.of(new Container<>(ints) ),
+                Arguments.of(new Container<>(booleans)),
+                Arguments.of(new Container<>(floats)),
+                Arguments.of(new Container<>(strings)),
+                Arguments.of(new Container<>(new int[]{})),
+                Arguments.of(new Container<>(null))
+        );
+    }
+
+    @ParameterizedTest(name = "Iteration #{index} -> array = {0}")
+    @MethodSource(value = "collectionDataProvider")
+    public void testCollection2JsonConversion(Container<?> arrayContainer) throws JsonProcessingException {
+        String json = JsonMapper.json(arrayContainer.getData());
+
+        String expected = mapper.writeValueAsString(arrayContainer.getData());
+        assertNotNull(json, "JSON string should not be null");
+        assertEquals(expected, json, "the output did not match the expected result");
+    }
+
+    private static Stream<Arguments> collectionDataProvider() {
+        List<Integer> integers = List.of(1, 2, 3, 4);
+        Set<Boolean> booleans = Set.of(true, false);
+        Queue<String> queue = new LinkedList<>();
+        queue.add("test1");
+        queue.add("test2");
+        Map<String, Float> map = Map.of("float1", 1.63f, "float2", 15323432f);
+
+        return Stream.of(
+                Arguments.of(new Container<>(integers) ),
+                Arguments.of(new Container<>(booleans)),
+                Arguments.of(new Container<>(queue)),
+                Arguments.of(new Container<>(map)),
+                Arguments.of(new Container<>(List.of())),
+                Arguments.of(new Container<>(null))
         );
     }
 
@@ -118,7 +173,7 @@ public class JsonMapperMarshallingTest {
     }
 
     @ParameterizedTest(name = "Iteration #{index} -> collection = {0}, Map = {1}, Set = {2}, Queue = {3}")
-    @MethodSource(value = "JsonMapperMarshallingTest#collectionDataProvider")
+    @MethodSource(value = "multiCollectionDataProvider")
     public void testObject2JsonWithCollectionTypesConversion(List<String> list, Map<String, Integer> map, Set<Integer> set, Queue<Integer> queue) throws JsonProcessingException {
         CollectionTypes collectionTypes = new CollectionTypes(list, map, set, queue);
 
@@ -129,7 +184,7 @@ public class JsonMapperMarshallingTest {
         assertEquals(expected, json, "the output did not match the expected result");
     }
 
-    private static Stream<Arguments> collectionDataProvider() {
+    private static Stream<Arguments> multiCollectionDataProvider() {
         List<String> testList = new ArrayList<>();
         testList.add("test");
         testList.add(null);

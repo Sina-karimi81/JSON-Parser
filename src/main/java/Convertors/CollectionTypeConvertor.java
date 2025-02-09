@@ -8,6 +8,12 @@ public class CollectionTypeConvertor extends Convertor {
 
     @Override
     public <T> void convert(T object, Field field, StringBuilder json) {
+        if (field == null) {
+            String collectionString = createCollectionString(object);
+            json.append(collectionString);
+            return;
+        }
+
         try {
             json.append(appendElement(field))
                     .append(":")
