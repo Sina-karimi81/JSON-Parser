@@ -9,54 +9,59 @@ public abstract class Convertor {
         return "\"" + field.getName() + "\"";
     }
 
-    protected boolean checkForStringType(Object value) {
-        return value instanceof String;
-    }
-
-    protected boolean checkForDateType(Object value) {
-        return value instanceof Date;
-    }
-
     public static <T> String writeAsString(T object) {
         StringBuilder result = new StringBuilder();
-        if (!checkForObjectType(object)) {
-            Field[] declaredFields = object.getClass().getDeclaredFields();
-
-            result.append("{");
-            Iterator<Field> iterator = Arrays.stream(declaredFields).iterator();
-            while (iterator.hasNext()) {
-                Field field = iterator.next();
-                field.setAccessible(true);
-
-                Convertor convertor = getConvertor(field);
-                if (convertor == null) {
-                    throw new IllegalArgumentException("cannot convert the given field of the input due to type not being supported: " + field.getName());
-                }
-
-                convertor.convert(object, field, result);
-
-                if (iterator.hasNext()) {
-                    result.append(",");
-                }
-            }
-            result.append("}");
+        if (checkForObjectType(object)) {
+            handleObjects(object, result);
         } else {
-            if (object.getClass().isArray()) {
-                FieldType.ARRAY.getConvertor().convert(object, null, result);
-            } else {
-                FieldType.COLLECTION.getConvertor().convert(object, null, result);
-            }
+            handlePrimitives(object, result);
         }
-
         return result.toString();
     }
 
-    private static boolean checkForObjectType(Object object) {
-        return object.getClass().isArray() || object instanceof Collection<?> || object instanceof Map<?,?>;
+    private static void handleObjects(Object object, StringBuilder result) {
+        Field[] declaredFields = object.getClass().getDeclaredFields();
+
+        result.append("{");
+        Iterator<Field> iterator = Arrays.stream(declaredFields).iterator();
+        while (iterator.hasNext()) {
+            Field field = iterator.next();
+            if (!field.canAccess(object)) {
+                field.setAccessible(true);
+            }
+
+            Convertor convertor = getConvertor(field);
+            if (convertor == null && checkForObjectType(field)) {
+                handleObjects(object, result);
+                if (iterator.hasNext()) {
+                    result.append(",");
+                }
+                continue;
+            } else if (convertor == null) {
+                throw new IllegalArgumentException("cannot convert the given field of the input due to type not being supported: " + field.getName());
+            }
+
+            convertor.convert(object, field, result);
+
+            if (iterator.hasNext()) {
+                result.append(",");
+            }
+        }
+        result.append("}");
+    }
+
+    private static void handlePrimitives(Object object, StringBuilder result) {
+        if (object.getClass().isArray()) {
+            FieldType.ARRAY.getConvertor().convert(object, null, result);
+        } else if (object instanceof Date date) {
+            result.append(date.getTime());
+        } else {
+            FieldType.COLLECTION.getConvertor().convert(object, null, result);
+        }
     }
 
     private static Convertor getConvertor(Field field) {
-        if (field.getType().isPrimitive()) {
+        if (field.getType().isPrimitive() || field.getType().equals(String.class) || field.getType().equals(Date.class)) {
             return FieldType.PRIMITIVE.getConvertor();
         } else if (field.getType().isArray()) {
             return FieldType.ARRAY.getConvertor();
@@ -65,6 +70,11 @@ public abstract class Convertor {
         }
 
         return null;
+    }
+
+    private static boolean checkForObjectType(Object object) {
+        return !object.getClass().isArray() && !(object instanceof Collection<?>) && !(object instanceof Map<?, ?>)
+                && !(object instanceof String) && !(object instanceof Date);
     }
 
     public abstract <T> void convert(T object, Field field, StringBuilder json);

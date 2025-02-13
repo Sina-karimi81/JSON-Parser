@@ -55,7 +55,7 @@ public class CollectionTypeConvertor extends Convertor {
     }
 
     private Object createValueForString(Object object) {
-        if (checkForStringType(object)) {
+        if (object instanceof String) {
             return "\"" + object + "\"";
         }
 

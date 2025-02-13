@@ -15,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class JsonMapperMarshallingTest {
 
-    // TODO: add tests for Date data type
-
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test
@@ -204,4 +202,20 @@ public class JsonMapperMarshallingTest {
         );
     }
 
+    @Test
+    public void testDate2JsonConversion() throws JsonProcessingException {
+        Date date = new Date();
+        String json = JsonMapper.json(date);
+
+        String expected = mapper.writeValueAsString(date);
+        assertNotNull(json, "JSON string should not be null");
+        assertEquals(expected, json, "the output of simple date did not match the expected result");
+
+        DateType dateType = new DateType(date);
+        String jsonned = JsonMapper.json(dateType);
+
+        String written = mapper.writeValueAsString(dateType);
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(written, jsonned, "the output of instance variable date did not match the expected result");
+    }
 }

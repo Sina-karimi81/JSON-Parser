@@ -2,8 +2,6 @@ package Convertors;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.Iterator;
 
 public class ArrayTypeConvertor extends Convertor {
 
@@ -34,7 +32,7 @@ public class ArrayTypeConvertor extends Convertor {
 
         for (int i = 0; i < Array.getLength(input); i++) {
             Object o = Array.get(input, i);
-            if (checkForStringType(o)) {
+            if (o instanceof String) {
                 o = "\"" + o + "\"";
             }
             result.append(o).append(",");

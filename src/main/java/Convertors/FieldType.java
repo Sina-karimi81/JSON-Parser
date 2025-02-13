@@ -4,8 +4,7 @@ public enum FieldType {
 
     PRIMITIVE(new PrimitiveTypeConvertor()),
     ARRAY(new ArrayTypeConvertor()),
-    COLLECTION(new CollectionTypeConvertor()),
-    OBJECT(null);
+    COLLECTION(new CollectionTypeConvertor());
 
     private final Convertor convertor;
 
