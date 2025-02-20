@@ -1,5 +1,6 @@
 package Convertors;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
@@ -49,6 +50,19 @@ public class CollectionTypeConvertor extends Convertor {
             }
 
             result.append("}");
+        } else if (input.getClass().isArray()) {
+            result.append("[");
+
+            for (int i = 0; i < Array.getLength(input); i++) {
+                Object o = Array.get(input, i);
+                result.append(createValue(o)).append(",");
+            }
+
+            if (Array.getLength(input) != 0) {
+                result.deleteCharAt(result.length()-1);
+            }
+
+            result.append("]");
         }
 
         return result.toString();

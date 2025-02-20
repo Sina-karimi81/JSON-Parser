@@ -260,4 +260,54 @@ public class JsonMapperMarshallingTest {
         assertNotNull(jsonned, "JSON string should not be null");
         assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
     }
+
+    @Test
+    public void testMapObjects2JsonConversion() throws JsonProcessingException {
+        Product product1 = new Product("PS5", 6.43f);
+        Product product2 = new Product("XBOX", 4.00f);
+        Product product3 = new Product("Switch", 3.5f);
+        Map<String, Product> products = Map.of("1", product1, "2", product2, "3", product3);
+
+        String jsonned = JsonMapper.json(products);
+
+        String expected = mapper.writeValueAsString(products);
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
+
+        Integer integer1 = 1;
+        Integer integer2 = 2;
+        Integer integer3 = 3;
+        Map<String, Integer> integers = Map.of("1", integer1, "2", integer2, "3", integer3);
+
+        jsonned = JsonMapper.json(integers);
+
+        expected = mapper.writeValueAsString(integers);
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
+    }
+
+    @Test
+    public void testArrayOfObjects2JsonConversion() throws JsonProcessingException {
+        Product product1 = new Product("PS5", 6.43f);
+        Product product2 = new Product("XBOX", 4.00f);
+        Product product3 = new Product("Switch", 3.5f);
+        Product[] products = {product1, product2, product3};
+
+        String jsonned = JsonMapper.json(products);
+
+        String expected = mapper.writeValueAsString(products);
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
+
+        Integer integer1 = 1;
+        Integer integer2 = 2;
+        Integer integer3 = 3;
+        Integer[] integers = {integer1, integer2, integer3};
+
+        jsonned = JsonMapper.json(integers);
+
+        expected = mapper.writeValueAsString(integers);
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
+    }
 }

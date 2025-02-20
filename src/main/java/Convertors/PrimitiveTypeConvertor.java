@@ -8,7 +8,7 @@ public class PrimitiveTypeConvertor extends Convertor {
     @Override
     public void convert(Object object, Field field, StringBuilder json) {
         try {
-            Object obj = null;
+            Object obj;
             if (field != null) {
                 obj = field.get(object);
                 json.append(appendElement(field)).append(":");

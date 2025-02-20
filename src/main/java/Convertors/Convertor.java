@@ -56,9 +56,7 @@ public abstract class Convertor {
     }
 
     protected static void handlePrimitives(Object object, StringBuilder result) {
-        if (object.getClass().isArray()) {
-            FieldType.ARRAY.getConvertor().convert(object, null, result);
-        } else if (isPrimitiveOrPrimitiveWrapperOrString(object.getClass())) {
+        if (isPrimitiveOrPrimitiveWrapperOrString(object.getClass())) {
             FieldType.PRIMITIVE.getConvertor().convert(object, null, result);
         } else {
             FieldType.COLLECTION.getConvertor().convert(object, null, result);
@@ -68,9 +66,7 @@ public abstract class Convertor {
     private static Convertor getConvertor(Field field) {
         if (isPrimitiveOrPrimitiveWrapperOrString(field.getType())) {
             return FieldType.PRIMITIVE.getConvertor();
-        } else if (field.getType().isArray()) {
-            return FieldType.ARRAY.getConvertor();
-        } else if (Collection.class.isAssignableFrom(field.getType()) || Map.class.isAssignableFrom(field.getType())) {
+        } else if (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType()) || Map.class.isAssignableFrom(field.getType())) {
             return FieldType.COLLECTION.getConvertor();
         }
 
