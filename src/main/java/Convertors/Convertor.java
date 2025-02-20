@@ -5,21 +5,17 @@ import java.util.*;
 
 public abstract class Convertor {
 
-    protected static String appendElement(Field field) {
-        return "\"" + field.getName() + "\"";
-    }
-
     public static String writeAsString(Object object) {
         StringBuilder result = new StringBuilder();
         if (checkForObjectType(object)) {
-            handleObjects(object, result);
+            handleNestedObjects(object, result);
         } else {
-            handlePrimitives(object, result);
+            handleNonNestedObjects(object, result);
         }
         return result.toString();
     }
 
-    protected static void handleObjects(Object object, StringBuilder result) {
+    protected static void handleNestedObjects(Object object, StringBuilder result) {
         Field[] declaredFields = object.getClass().getDeclaredFields();
 
         result.append("{");
@@ -34,7 +30,7 @@ public abstract class Convertor {
             if (convertor == null && checkForObjectType(field)) {
                 result.append(appendElement(field)).append(":");
                 try {
-                    handleObjects(field.get(object), result);
+                    handleNestedObjects(field.get(object), result);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
@@ -46,7 +42,7 @@ public abstract class Convertor {
                 throw new IllegalArgumentException("cannot convert the given field of the input due to type not being supported: " + field.getName());
             }
 
-            convertor.convert(object, field, result);
+            convertor.marshal(object, field, result);
 
             if (iterator.hasNext()) {
                 result.append(",");
@@ -55,11 +51,11 @@ public abstract class Convertor {
         result.append("}");
     }
 
-    protected static void handlePrimitives(Object object, StringBuilder result) {
+    protected static void handleNonNestedObjects(Object object, StringBuilder result) {
         if (isPrimitiveOrPrimitiveWrapperOrString(object.getClass())) {
-            FieldType.PRIMITIVE.getConvertor().convert(object, null, result);
+            FieldType.PRIMITIVE.getConvertor().marshal(object, null, result);
         } else {
-            FieldType.COLLECTION.getConvertor().convert(object, null, result);
+            FieldType.COLLECTION.getConvertor().marshal(object, null, result);
         }
     }
 
@@ -71,6 +67,10 @@ public abstract class Convertor {
         }
 
         return null;
+    }
+
+    protected static String appendElement(Field field) {
+        return "\"" + field.getName() + "\"";
     }
 
     protected static boolean isPrimitiveOrPrimitiveWrapperOrString(Class<?> type) {
@@ -86,9 +86,9 @@ public abstract class Convertor {
 
     protected static boolean checkForObjectType(Object object) {
         return !object.getClass().isArray() && !(object instanceof Collection<?>) && !(object instanceof Map<?, ?>)
-                && !(object instanceof String) && !(object instanceof Date) && !isWrapperType(object.getClass());
+                && !isPrimitiveOrPrimitiveWrapperOrString(object.getClass());
     }
 
-    public abstract void convert(Object object, Field field, StringBuilder json);
+    public abstract void marshal(Object object, Field field, StringBuilder json);
 
 }

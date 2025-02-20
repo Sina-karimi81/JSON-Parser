@@ -8,7 +8,7 @@ import java.util.Map;
 public class CollectionTypeConvertor extends Convertor {
 
     @Override
-    public void convert(Object object, Field field, StringBuilder json) {
+    public void marshal(Object object, Field field, StringBuilder json) {
         if (field == null) {
             String collectionString = createCollectionString(object);
             json.append(collectionString);
@@ -80,11 +80,11 @@ public class CollectionTypeConvertor extends Convertor {
         }
 
         if (isPrimitiveOrPrimitiveWrapperOrString(object.getClass())) {
-            handlePrimitives(object, result);
+            handleNonNestedObjects(object, result);
             return result.toString();
         }
 
-        handleObjects(object, result);
+        handleNestedObjects(object, result);
         return result.toString();
     }
 

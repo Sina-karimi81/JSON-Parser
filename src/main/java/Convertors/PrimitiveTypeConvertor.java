@@ -6,7 +6,7 @@ import java.util.Date;
 public class PrimitiveTypeConvertor extends Convertor {
 
     @Override
-    public void convert(Object object, Field field, StringBuilder json) {
+    public void marshal(Object object, Field field, StringBuilder json) {
         try {
             Object obj;
             if (field != null) {
