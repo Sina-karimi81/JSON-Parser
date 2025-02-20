@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 public class ArrayTypeConvertor extends Convertor {
 
     @Override
-    public <T> void convert(T object, Field field, StringBuilder json) {
+    public void convert(Object object, Field field, StringBuilder json) {
         if (field == null) {
             String arrayString = createArrayString(object);
             json.append(arrayString);

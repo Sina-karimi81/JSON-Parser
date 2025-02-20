@@ -7,7 +7,7 @@ import java.util.Map;
 public class CollectionTypeConvertor extends Convertor {
 
     @Override
-    public <T> void convert(T object, Field field, StringBuilder json) {
+    public void convert(Object object, Field field, StringBuilder json) {
         if (field == null) {
             String collectionString = createCollectionString(object);
             json.append(collectionString);
@@ -34,7 +34,7 @@ public class CollectionTypeConvertor extends Convertor {
         if (input instanceof Collection<?> collection) {
             result.append("[");
 
-            collection.forEach(o -> result.append(createValueForString(o)).append(","));
+            collection.forEach(o -> result.append(createValue(o)).append(","));
             if (!collection.isEmpty()) {
                 result.deleteCharAt(result.length() - 1);
             }
@@ -43,7 +43,7 @@ public class CollectionTypeConvertor extends Convertor {
         } else if (input instanceof Map<?,?> map) {
             result.append("{");
 
-            map.forEach((k, v) -> result.append("\"").append(k).append("\":").append(createValueForString(v)).append(","));
+            map.forEach((k, v) -> result.append("\"").append(k).append("\":").append(createValue(v)).append(","));
             if (!map.isEmpty()) {
                 result.deleteCharAt(result.length() - 1);
             }
@@ -54,12 +54,24 @@ public class CollectionTypeConvertor extends Convertor {
         return result.toString();
     }
 
-    private Object createValueForString(Object object) {
-        if (object instanceof String) {
-            return "\"" + object + "\"";
+    private String createValue(Object object) {
+        StringBuilder result = new StringBuilder();
+
+        if (object == null) {
+            return "null";
         }
 
-        return object;
+        if (object instanceof String) {
+            return result.append("\"").append(object).append("\"").toString();
+        }
+
+        if (isPrimitiveOrPrimitiveWrapperOrString(object.getClass())) {
+            handlePrimitives(object, result);
+            return result.toString();
+        }
+
+        handleObjects(object, result);
+        return result.toString();
     }
 
 }

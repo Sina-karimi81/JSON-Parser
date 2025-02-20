@@ -9,21 +9,17 @@ public abstract class Convertor {
         return "\"" + field.getName() + "\"";
     }
 
-    public static <T> String writeAsString(T object) {
-        try {
-            StringBuilder result = new StringBuilder();
-            if (checkForObjectType(object)) {
-                handleObjects(object, result);
-            } else {
-                handlePrimitives(object, result);
-            }
-            return result.toString();
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+    public static String writeAsString(Object object) {
+        StringBuilder result = new StringBuilder();
+        if (checkForObjectType(object)) {
+            handleObjects(object, result);
+        } else {
+            handlePrimitives(object, result);
         }
+        return result.toString();
     }
 
-    private static void handleObjects(Object object, StringBuilder result) throws IllegalAccessException {
+    protected static void handleObjects(Object object, StringBuilder result) {
         Field[] declaredFields = object.getClass().getDeclaredFields();
 
         result.append("{");
@@ -37,7 +33,11 @@ public abstract class Convertor {
             Convertor convertor = getConvertor(field);
             if (convertor == null && checkForObjectType(field)) {
                 result.append(appendElement(field)).append(":");
-                handleObjects(field.get(object), result);
+                try {
+                    handleObjects(field.get(object), result);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
                 if (iterator.hasNext()) {
                     result.append(",");
                 }
@@ -55,11 +55,11 @@ public abstract class Convertor {
         result.append("}");
     }
 
-    private static void handlePrimitives(Object object, StringBuilder result) {
+    protected static void handlePrimitives(Object object, StringBuilder result) {
         if (object.getClass().isArray()) {
             FieldType.ARRAY.getConvertor().convert(object, null, result);
-        } else if (object instanceof Date date) {
-            result.append(date.getTime());
+        } else if (isPrimitiveOrPrimitiveWrapperOrString(object.getClass())) {
+            FieldType.PRIMITIVE.getConvertor().convert(object, null, result);
         } else {
             FieldType.COLLECTION.getConvertor().convert(object, null, result);
         }
@@ -77,22 +77,22 @@ public abstract class Convertor {
         return null;
     }
 
-    public static boolean isPrimitiveOrPrimitiveWrapperOrString(Class<?> type) {
+    protected static boolean isPrimitiveOrPrimitiveWrapperOrString(Class<?> type) {
         return (type.isPrimitive() && type != void.class) || isWrapperType(type) ||
                  type == String.class || type == Date.class;
     }
 
-    private static boolean isWrapperType(Class<?> type) {
+    protected static boolean isWrapperType(Class<?> type) {
         return type == Double.class || type == Float.class || type == Long.class ||
                 type == Integer.class || type == Short.class || type == Character.class ||
                 type == Byte.class || type == Boolean.class;
     }
 
-    private static boolean checkForObjectType(Object object) {
+    protected static boolean checkForObjectType(Object object) {
         return !object.getClass().isArray() && !(object instanceof Collection<?>) && !(object instanceof Map<?, ?>)
                 && !(object instanceof String) && !(object instanceof Date) && !isWrapperType(object.getClass());
     }
 
-    public abstract <T> void convert(T object, Field field, StringBuilder json);
+    public abstract void convert(Object object, Field field, StringBuilder json);
 
 }

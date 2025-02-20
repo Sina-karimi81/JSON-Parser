@@ -235,4 +235,29 @@ public class JsonMapperMarshallingTest {
         assertNotNull(jsonned, "JSON string should not be null");
         assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
     }
+
+    @Test
+    public void testListObjects2JsonConversion() throws JsonProcessingException {
+        Product product1 = new Product("PS5", 6.43f);
+        Product product2 = new Product("XBOX", 4.00f);
+        Product product3 = new Product("Switch", 3.5f);
+        List<Product> products = List.of(product1, product2, product3);
+
+        String jsonned = JsonMapper.json(products);
+
+        String expected = mapper.writeValueAsString(products);
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
+
+        Integer integer1 = 1;
+        Integer integer2 = 2;
+        Integer integer3 = 3;
+        List<Integer> integers = List.of(integer1, integer2, integer3);
+
+        jsonned = JsonMapper.json(integers);
+
+        expected = mapper.writeValueAsString(integers);
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
+    }
 }
