@@ -1,4 +1,7 @@
 import TestObjects.*;
+import TestObjects.ultimate.Product;
+import TestObjects.ultimate.QueryResult;
+import TestObjects.ultimate.TestObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -18,7 +21,7 @@ public class JsonMapperMarshallingTest {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    public void testObject2JsonConversion() {
+    public void testEmptyObject2JsonConversion() {
         Object testObject = new Object();
 
         String json = JsonMapper.json(testObject);
@@ -217,5 +220,19 @@ public class JsonMapperMarshallingTest {
         String written = mapper.writeValueAsString(dateType);
         assertNotNull(jsonned, "JSON string should not be null");
         assertEquals(written, jsonned, "the output of instance variable date did not match the expected result");
+    }
+
+    @Test
+    public void testObject2JsonConversion() throws JsonProcessingException {
+        Product product = new Product("test1", 5.43f);
+        QueryResult result = new QueryResult(List.of("ps5", "xbox", "nintendo"), 3);
+
+        TestObject testObject = new TestObject(result, product, new Date());
+        String expected = mapper.writeValueAsString(testObject);
+
+        String jsonned = JsonMapper.json(testObject);
+
+        assertNotNull(jsonned, "JSON string should not be null");
+        assertEquals(expected, jsonned, "the output of instance variable date did not match the expected result");
     }
 }

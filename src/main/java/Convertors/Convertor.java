@@ -5,21 +5,25 @@ import java.util.*;
 
 public abstract class Convertor {
 
-    protected String appendElement(Field field) {
+    protected static String appendElement(Field field) {
         return "\"" + field.getName() + "\"";
     }
 
     public static <T> String writeAsString(T object) {
-        StringBuilder result = new StringBuilder();
-        if (checkForObjectType(object)) {
-            handleObjects(object, result);
-        } else {
-            handlePrimitives(object, result);
+        try {
+            StringBuilder result = new StringBuilder();
+            if (checkForObjectType(object)) {
+                handleObjects(object, result);
+            } else {
+                handlePrimitives(object, result);
+            }
+            return result.toString();
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        return result.toString();
     }
 
-    private static void handleObjects(Object object, StringBuilder result) {
+    private static void handleObjects(Object object, StringBuilder result) throws IllegalAccessException {
         Field[] declaredFields = object.getClass().getDeclaredFields();
 
         result.append("{");
@@ -32,7 +36,8 @@ public abstract class Convertor {
 
             Convertor convertor = getConvertor(field);
             if (convertor == null && checkForObjectType(field)) {
-                handleObjects(object, result);
+                result.append(appendElement(field)).append(":");
+                handleObjects(field.get(object), result);
                 if (iterator.hasNext()) {
                     result.append(",");
                 }
@@ -61,7 +66,7 @@ public abstract class Convertor {
     }
 
     private static Convertor getConvertor(Field field) {
-        if (field.getType().isPrimitive() || field.getType().equals(String.class) || field.getType().equals(Date.class)) {
+        if (isPrimitiveOrPrimitiveWrapperOrString(field.getType())) {
             return FieldType.PRIMITIVE.getConvertor();
         } else if (field.getType().isArray()) {
             return FieldType.ARRAY.getConvertor();
@@ -70,6 +75,13 @@ public abstract class Convertor {
         }
 
         return null;
+    }
+
+    public static boolean isPrimitiveOrPrimitiveWrapperOrString(Class<?> type) {
+        return (type.isPrimitive() && type != void.class) ||
+                type == Double.class || type == Float.class || type == Long.class ||
+                type == Integer.class || type == Short.class || type == Character.class ||
+                type == Byte.class || type == Boolean.class || type == String.class || type == Date.class;
     }
 
     private static boolean checkForObjectType(Object object) {
