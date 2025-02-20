@@ -2,7 +2,7 @@ import Convertors.Convertor;
 
 public class JsonMapper {
 
-    public static <T> String json(T object) {
+    public static String json(Object object) {
         if (object == null) {
             return "null";
         }

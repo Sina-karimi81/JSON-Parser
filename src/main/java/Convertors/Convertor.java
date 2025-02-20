@@ -78,15 +78,19 @@ public abstract class Convertor {
     }
 
     public static boolean isPrimitiveOrPrimitiveWrapperOrString(Class<?> type) {
-        return (type.isPrimitive() && type != void.class) ||
-                type == Double.class || type == Float.class || type == Long.class ||
+        return (type.isPrimitive() && type != void.class) || isWrapperType(type) ||
+                 type == String.class || type == Date.class;
+    }
+
+    private static boolean isWrapperType(Class<?> type) {
+        return type == Double.class || type == Float.class || type == Long.class ||
                 type == Integer.class || type == Short.class || type == Character.class ||
-                type == Byte.class || type == Boolean.class || type == String.class || type == Date.class;
+                type == Byte.class || type == Boolean.class;
     }
 
     private static boolean checkForObjectType(Object object) {
         return !object.getClass().isArray() && !(object instanceof Collection<?>) && !(object instanceof Map<?, ?>)
-                && !(object instanceof String) && !(object instanceof Date);
+                && !(object instanceof String) && !(object instanceof Date) && !isWrapperType(object.getClass());
     }
 
     public abstract <T> void convert(T object, Field field, StringBuilder json);
