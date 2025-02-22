@@ -3,7 +3,8 @@ package Convertors;
 public enum FieldType {
 
     PRIMITIVE(new PrimitiveTypeConvertor()),
-    COLLECTION(new CollectionTypeConvertor());
+    COLLECTION(new CollectionTypeConvertor()),
+    OBJECTS(new ObjectConvertor());
 
     private final Convertor convertor;
 

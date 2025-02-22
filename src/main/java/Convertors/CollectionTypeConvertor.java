@@ -1,5 +1,7 @@
 package Convertors;
 
+import data.FieldData;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -8,21 +10,13 @@ import java.util.Map;
 public class CollectionTypeConvertor extends Convertor {
 
     @Override
-    public void marshal(Object object, Field field, StringBuilder json) {
-        if (field == null) {
-            String collectionString = createCollectionString(object);
-            json.append(collectionString);
-            return;
+    public void marshal(FieldData data, StringBuilder json) {
+        if (data.getName() != null) {
+            json.append(appendElement(data.getName()))
+                    .append(":");
         }
-
-        try {
-            json.append(appendElement(field))
-                    .append(":")
-                    .append(createCollectionString(field.get(object)));
-        } catch (IllegalAccessException e) {
-            System.out.println("could not access the provided field: " + field.getName());
-            throw new RuntimeException(e);
-        }
+        String collectionString = createCollectionString(data.getValue());
+        json.append(collectionString);
     }
 
     private String createCollectionString(Object input) {
@@ -80,11 +74,11 @@ public class CollectionTypeConvertor extends Convertor {
         }
 
         if (isPrimitiveOrPrimitiveWrapperOrString(object.getClass())) {
-            handleNonNestedObjects(object, result);
+            handleNonObjects(object, result);
             return result.toString();
         }
 
-        handleNestedObjects(object, result);
+        handleObjects(object, result);
         return result.toString();
     }
 

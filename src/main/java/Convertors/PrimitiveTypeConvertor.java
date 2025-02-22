@@ -1,26 +1,19 @@
 package Convertors;
 
+import data.FieldData;
+
 import java.lang.reflect.Field;
 import java.util.Date;
 
 public class PrimitiveTypeConvertor extends Convertor {
 
     @Override
-    public void marshal(Object object, Field field, StringBuilder json) {
-        try {
-            Object obj;
-            if (field != null) {
-                obj = field.get(object);
-                json.append(appendElement(field)).append(":");
-            } else {
-                obj = object;
-            }
-
-            convert(json, obj);
-        } catch (IllegalAccessException e) {
-            System.out.println("could not access the provided field: " + field.getName());
-            throw new RuntimeException(e);
+    public void marshal(FieldData data, StringBuilder json) {
+        if (data.getName() != null) {
+            json.append(appendElement(data.getName()))
+                    .append(":");
         }
+        convert(json, data.getValue());
     }
 
     private static void convert(StringBuilder json, Object obj) {
