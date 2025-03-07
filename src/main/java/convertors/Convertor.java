@@ -1,8 +1,7 @@
-package Convertors;
+package convertors;
 
 import data.FieldData;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 

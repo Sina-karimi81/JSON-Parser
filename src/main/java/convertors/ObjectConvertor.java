@@ -1,4 +1,4 @@
-package Convertors;
+package convertors;
 
 import data.FieldData;
 

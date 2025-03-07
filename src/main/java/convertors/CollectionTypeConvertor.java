@@ -1,9 +1,8 @@
-package Convertors;
+package convertors;
 
 import data.FieldData;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
 

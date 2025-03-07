@@ -1,8 +1,7 @@
-package Convertors;
+package convertors;
 
 import data.FieldData;
 
-import java.lang.reflect.Field;
 import java.util.Date;
 
 public class PrimitiveTypeConvertor extends Convertor {

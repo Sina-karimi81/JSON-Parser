@@ -1,4 +1,4 @@
-import Convertors.Convertor;
+import convertors.Convertor;
 
 public class JsonMapper {
 
