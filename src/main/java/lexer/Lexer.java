@@ -66,7 +66,7 @@ public class Lexer {
                         return createToken(TokenType.INT, main);
                     }
                 } else {
-                    return createToken(TokenType.ILLEGAL, String.valueOf(this.currentChar));
+                    result = createToken(TokenType.ILLEGAL, String.valueOf(this.currentChar));
                 }
             }
         }
@@ -95,7 +95,7 @@ public class Lexer {
     }
 
     private Token createToken(TokenType type, String ch) {
-        return  new Token(type, ch);
+        return new Token(type, ch);
     }
 
     private String readIdentifier() {

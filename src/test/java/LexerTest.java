@@ -75,6 +75,34 @@ public class LexerTest {
     }
 
     @Test
+    public void testOffByOneWhenNumberIsInvolved() {
+        String json = "{\"grade\": 65.456, \"isStudent\": false}";
+
+        Lexer lexer = new Lexer(json);
+        List<Token> actualTokens = new ArrayList<>();
+
+        Token token;
+        while ((token = lexer.nextToken()).getType() != TokenType.EOF) {
+            actualTokens.add(token);
+        }
+
+        // Expected tokens
+        List<Token> expectedTokens = List.of(
+                new Token(TokenType.LBRACE, "{"),
+                new Token(TokenType.IDENT, "grade"),
+                new Token(TokenType.COLON, ":"),
+                new Token(TokenType.FLOAT, "65.456"),
+                new Token(TokenType.COMMA, ","),
+                new Token(TokenType.IDENT, "isStudent"),
+                new Token(TokenType.COLON, ":"),
+                new Token(TokenType.BOOLEAN, "false"),
+                new Token(TokenType.RBRACE, "}")
+        );
+
+        assertEquals(expectedTokens, actualTokens, "Lexer should generate correct tokens");
+    }
+
+    @Test
     public void testObjectAndNullLexerOutput() {
         String json = "{\"name\": \"John\", \"data\": {\"grade\": 65.456, \"isStudent\": false}, \"address\": null}";
 
@@ -136,6 +164,38 @@ public class LexerTest {
                 new Token(TokenType.IDENT, "admissionDate"),
                 new Token(TokenType.COLON, ":"),
                 new Token(TokenType.STRING, "2024-05-16"),
+                new Token(TokenType.COMMA, ","),
+                new Token(TokenType.IDENT, "isStudent"),
+                new Token(TokenType.COLON, ":"),
+                new Token(TokenType.BOOLEAN, "false"),
+                new Token(TokenType.RBRACE, "}")
+        );
+
+        assertEquals(expectedTokens, actualTokens, "Lexer should generate correct tokens");
+    }
+
+    @Test
+    public void testIllegalLexerOutput() {
+        String json = "{\"name\": \"John\", \"admissionDate\": +, \"isStudent\": false}";
+
+        Lexer lexer = new Lexer(json);
+        List<Token> actualTokens = new ArrayList<>();
+
+        Token token;
+        while ((token = lexer.nextToken()).getType() != TokenType.EOF) {
+            actualTokens.add(token);
+        }
+
+        // Expected tokens
+        List<Token> expectedTokens = List.of(
+                new Token(TokenType.LBRACE, "{"),
+                new Token(TokenType.IDENT, "name"),
+                new Token(TokenType.COLON, ":"),
+                new Token(TokenType.STRING, "John"),
+                new Token(TokenType.COMMA, ","),
+                new Token(TokenType.IDENT, "admissionDate"),
+                new Token(TokenType.COLON, ":"),
+                new Token(TokenType.ILLEGAL, "+"),
                 new Token(TokenType.COMMA, ","),
                 new Token(TokenType.IDENT, "isStudent"),
                 new Token(TokenType.COLON, ":"),
