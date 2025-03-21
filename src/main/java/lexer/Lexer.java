@@ -3,6 +3,8 @@ package lexer;
 import token.Token;
 import token.TokenType;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class Lexer {
@@ -30,9 +32,17 @@ public class Lexer {
 
         switch (this.currentChar) {
             case ',' -> result = createToken(TokenType.COMMA, String.valueOf(this.currentChar));
-            case '{' -> result = createToken(TokenType.LBRACE, String.valueOf(this.currentChar));
+            case '{' -> {
+                if (this.currentPosition == 0) {
+                    result = createToken(TokenType.LBRACE, String.valueOf(this.currentChar));
+                } else {
+                    return createToken(TokenType.OBJECT, readComplexTypes());
+                }
+            }
             case '}' -> result = createToken(TokenType.RBRACE, String.valueOf(this.currentChar));
-            case '[' -> result = createToken(TokenType.LBRACKET, String.valueOf(this.currentChar));
+            case '[' -> {
+                return createToken(TokenType.ARRAY, readComplexTypes());
+            }
             case ']' -> result = createToken(TokenType.RBRACKET, String.valueOf(this.currentChar));
             case ':' -> result = createToken(TokenType.COLON, String.valueOf(this.currentChar));
             case '\"' -> {
@@ -98,6 +108,10 @@ public class Lexer {
         return new Token(type, ch);
     }
 
+    private Token createToken(TokenType type, List<Token> ch) {
+        return new Token(type, ch);
+    }
+
     private String readIdentifier() {
         int tempPosition = this.currentPosition;
         while (isLetter(this.currentChar)) {
@@ -123,6 +137,26 @@ public class Lexer {
         }
 
         return this.input.substring(tempPosition, this.currentPosition);
+    }
+
+    private List<Token> readComplexTypes() {
+        List<Token> result = new ArrayList<>();
+
+        this.readChar();
+        int isEndOfComplexType = 1;
+
+        while (isEndOfComplexType > 0) {
+            Token token = nextToken();
+            if (token.getType().equals(TokenType.RBRACE) || token.getType().equals(TokenType.RBRACKET)) {
+                isEndOfComplexType--;
+            } else if (token.getType().equals(TokenType.LBRACE) || token.getType().equals(TokenType.LBRACKET)) {
+                isEndOfComplexType++;
+            } else {
+                result.add(token);
+            }
+        }
+
+        return result;
     }
 
     private void skipWhiteSpace() {

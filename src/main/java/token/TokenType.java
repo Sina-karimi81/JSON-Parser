@@ -14,5 +14,7 @@ public enum TokenType {
     RBRACKET,
     COLON,
     NULL,
+    ARRAY,
+    OBJECT,
     BOOLEAN
 }
