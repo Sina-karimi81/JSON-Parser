@@ -10,11 +10,11 @@ import java.util.*;
 
 public class Parser {
 
-    private Lexer lexer;
+    private final Lexer lexer;
     private Token currentToken;
     private Token peekToken;
     @Getter
-    private List<String> errors;
+    private final List<String> errors;
 
     public Parser(Lexer lexer) {
         this.errors = new ArrayList<>();
@@ -28,7 +28,7 @@ public class Parser {
         Map<String, Node<?>> result = new HashMap<>();
 
         while (!currTokenIs(TokenType.EOF)) {
-            String fieldName = null;
+            String fieldName;
             if (currTokenIs(TokenType.IDENT)) {
                 fieldName = currentToken.getLiteral();
 
