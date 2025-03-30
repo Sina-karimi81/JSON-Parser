@@ -5,6 +5,8 @@ import data.FieldData;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static util.TypeUtils.*;
+
 public abstract class Convertor {
     public static String writeAsString(Object object) {
         StringBuilder result = new StringBuilder();
@@ -61,7 +63,7 @@ public abstract class Convertor {
     private static Convertor getConvertor(Field field) {
         if (isPrimitiveOrPrimitiveWrapperOrString(field.getType())) {
             return FieldType.PRIMITIVE.getConvertor();
-        } else if (isCollectionType(field.getType())) {
+        } else if (isCollectionTypeOrArray(field.getType())) {
             return FieldType.COLLECTION.getConvertor();
         } else {
             return FieldType.OBJECTS.getConvertor();
@@ -70,25 +72,6 @@ public abstract class Convertor {
 
     protected static String appendElement(String name) {
         return "\"" + name + "\"";
-    }
-
-    protected static boolean isPrimitiveOrPrimitiveWrapperOrString(Class<?> type) {
-        return (type.isPrimitive() && type != void.class) || isWrapperType(type) ||
-                 type == String.class || type == Date.class;
-    }
-
-    protected static boolean isWrapperType(Class<?> type) {
-        return type == Double.class || type == Float.class || type == Long.class ||
-                type == Integer.class || type == Short.class || type == Character.class ||
-                type == Byte.class || type == Boolean.class;
-    }
-
-    protected static boolean isCollectionType(Class<?> type) {
-        return type.isArray() || Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type);
-    }
-
-    protected static boolean isObject(Object object) {
-        return !isCollectionType(object.getClass()) && !isPrimitiveOrPrimitiveWrapperOrString(object.getClass());
     }
 
     public abstract void marshal(FieldData data, StringBuilder json);
