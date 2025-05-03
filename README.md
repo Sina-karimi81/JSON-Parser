@@ -1,28 +1,66 @@
 # JSON parser
-Inspired by the [Jackson-databind](https://github.com/FasterXML/jackson-databind) project, this project is JSON serializer and deserializer, aimed to work with Java's standard library specialy reflection.
+A lightweight JSON serializer and deserializer for Java, inspired by the [Jackson-databind](https://github.com/FasterXML/jackson-databind) project. This library leverages Java's reflection capabilities to convert Java objects to JSON strings and vice versa.
+
+## Features
+- Serialization: Convert Java objects, collections, and primitive types into JSON strings.
+- Deserialization: Parse JSON strings to reconstruct Java objects.
+- Design Patterns: Utilizes the Template and Strategy design patterns for flexible and maintainable code.
+- Reflection-Based: Employs Java Reflection API to dynamically access object fields and types.
 
 ## Libraries
 Libraries used in this project
-- Junit 5
-- Lombok
-- jackson-databind (for testing and output validation)
+- JUnit 5 for unit testing
+- Lombok to reduce boilerplate code
+- jackson-databind for testing and output validation
 
-## Code
-You can devide this project to two parts:
-1. **Serializer**
-2. **Deserializer**
-The entry point of this library is the [JsonMapper](src/main/java/JsonMapper.java) class, which you can checkout yourself.
+## Project Structure
+The project is divided into two main components:
+1. **Serializer**: Handles the conversion of Java objects to JSON strings.
+2. **Deserializer**: Handles the parsing of JSON strings back into Java objects.
 
-### Serializer
+The entry point for the library is the [JsonMapper](src/main/java/JsonMapper.java) class
+
+## Getting Started
+
+### Prerequisites
+- Java 17 or higher
+- Maven
+
+### Installation
+1. Clone the repository:
+```sh
+git clone https://github.com/Sina-karimi81/JSON-Parser.git
+```
+2. Navigate to the project directory:
+```sh
+cd JSON-Parser
+```
+3. Build the project using Maven:
+```sh
+mvn clean install
+```
+
+## Usage
+Here's a basic example of how to use the `JsonMapper` class:
+```java
+JsonMapper mapper = new JsonMapper();
+
+// Serialize an object to JSON
+String jsonString = mapper.json(yourObject);
+
+// Deserialize JSON to an object
+YourClass obj = mapper.object(jsonString, YourClass.class);
+```
+
+### Serialization Details
 The serialization part was the _easy_ part, I used the [Template](https://refactoring.guru/design-patterns/template-method) and [Strategy](https://refactoring.guru/design-patterns/strategy) design patterns together to create the logic. basically we have three types of data:
 1. Collections
 2. Objects
 3. Primitive Types
 toghether these form our strategies for data marshalling and I decide on the type of convertor to use based on the field type. You can check the [TypeUtils](src/main/java/util/TypeUtils.java) to see how I check for a field type. After I got the field type, I got it's value for the input object and passed to the selected convertor class.
-
 I validated my output using the `ObjectMapper` class of the jackson-databind library. you can see the test cases at [JsonMapperMarshallingTest](src/test/java/JsonMapperMarshallingTest.java) class.
 
-### Deserializer
+### Deserialization Details
 This was the part that got me, and it got me **hard**. Basically, I treated the deaserialization process like a compiler would, I broke my logic to a Lexer, a Parser and a Semantic Analyzer. I took this insipiration from the Amazing book _Write an Interpreter in Go_, if you look closely my code awfully resembles the author of the book's code :)) 
 
 #### Lexer
