@@ -1,17 +1,15 @@
-package TestObjects.ultimate;
+package TestObjects.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class QueryResult {
+public class QueryResultWithArray {
 
-    private List<String> list;
+    private String[] list;
     private int count;
 
 }

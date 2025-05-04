@@ -1,55 +1,44 @@
-import TestObjects.ultimate.QueryResult;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import TestObjects.pojo.Product;
+import TestObjects.pojo.QueryResult;
+import TestObjects.pojo.QueryResultWithArray;
 import exception.JsonParseException;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JsonMapperUnmarshallingTest {
 
     @Test
-    public void debugJacksonReadValue() throws JsonParseException, JsonProcessingException {
+    public void Given_JsonWithPrimitive_ExpectObject() throws JsonParseException {
+        String content = "{\"name\": \"prod\", \"price\": 2.0}";
+
+        Product result = JsonMapper.object(content, Product.class);
+        assertNotNull(result);
+        assertEquals("prod", result.getName());
+        assertEquals(2.0f, result.getPrice());
+    }
+
+    @Test
+    public void testObjectWithArrayTypes() throws JsonParseException {
         String content = "{\"list\": [\"Hello\",\"World\"], \"count\": 2}";
 
-        ObjectMapper mapper = new ObjectMapper();
-
-        QueryResult result = mapper.readValue(content, QueryResult.class);
+        QueryResultWithArray result = JsonMapper.object(content, QueryResultWithArray.class);
         assertNotNull(result);
-        assertEquals(List.of("Hello","World"), result.getList());
+        assertArrayEquals(new String[]{"Hello", "World"}, result.getList());
         assertEquals(2, result.getCount());
     }
 
     @Test
     public void testObjectWithListTypes() throws JsonParseException {
-        String content = "{\"list\": [\"Hello\",\"World\"], \"count\": 2}";
+        String content = "{\"list\": [\"Hello\",\"World\"], \"set\": [1,1], \"count\": 2}";
 
         QueryResult result = JsonMapper.object(content, QueryResult.class);
         assertNotNull(result);
-        assertEquals(List.of("Hello","World"), result.getList());
+        assertEquals(List.of("Hello", "World"), result.getList());
+        assertEquals(Set.of(1), result.getSet());
         assertEquals(2, result.getCount());
     }
-
-    @Test
-    public void getGenericTypeInfo() {
-        List<String> strings = new ArrayList<>();
-        Class<?> clazz = strings.getClass();
-        TypeVariable<? extends Class<?>>[] typeParameters = clazz.getTypeParameters();
-        Class<?> componentType = clazz.getComponentType();
-        Type genericSuperclass = clazz.getGenericSuperclass();
-
-        if (genericSuperclass instanceof ParameterizedType) {
-            ParameterizedType paramType = (ParameterizedType) genericSuperclass;
-            Type actualType = paramType.getActualTypeArguments()[0];
-            System.out.println("Actual Type: " + actualType.getTypeName()); // java.lang.String
-        }
-    }
-
 }

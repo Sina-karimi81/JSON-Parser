@@ -1,5 +1,6 @@
 package util;
 
+import annotations.ElementType;
 import exception.JsonParseException;
 import parser.nodes.ArrayNode;
 import parser.nodes.Node;
@@ -7,10 +8,8 @@ import parser.nodes.ObjectNode;
 import parser.nodes.PrimitiveNode;
 import token.TokenType;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -79,7 +78,7 @@ public class TypeUtils {
             } else if (value instanceof ArrayNode arrayNode) {
                 List<Node<?>> vals = arrayNode.getValue();
                 Class<?> aClass = fieldByName.getType();
-                Object arrayValue = createCollectionTypeValue(aClass, vals);
+                Object arrayValue = createCollectionTypeValue(aClass, vals, fieldByName);
                 fieldByName.set(targetObject, arrayValue);
             } else if (value instanceof ObjectNode objectNode) {
                 Map<String, Node<?>> vals = objectNode.getValue();
@@ -92,48 +91,63 @@ public class TypeUtils {
         }
     }
 
-    public static Object createCollectionTypeValue(Class<?> classType, List<Node<?>> values) throws JsonParseException {
+    public static Object createCollectionTypeValue(Class<?> classType, List<Node<?>> values, Field field) throws JsonParseException {
         try {
-            List<Object> result = new ArrayList<>();
+            List<Object> temporaryDataHolder = new ArrayList<>();
 
             Class<?> componentType = null;
             if (classType.isArray()) {
                 componentType = classType.getComponentType();
-            } else if (isCollection(classType)) {
-                Type genericSuperclass = classType.getGenericSuperclass();
-
-                if (genericSuperclass instanceof ParameterizedType paramType) {
-                    Type[] actualTypeArguments = paramType.getActualTypeArguments();
-                    componentType = Class.forName(actualTypeArguments[0].getTypeName());
+            } else if (isCollectionFramework(classType)) {
+                ElementType annotation = field.getAnnotation(ElementType.class);
+                if (annotation != null) {
+                    componentType = annotation.clazz();
                 }
             }
 
             for (Node<?> node: values) {
                 if (isPrimitiveOrPrimitiveWrapperOrString(componentType)) {
                     Object primitiveValue = createPrimitiveValue(node.getType(), componentType, (String) node.getValue());
-                    result.add(primitiveValue);
+                    temporaryDataHolder.add(primitiveValue);
                 } else if (isObject(componentType)) {
                     Object objectValue = createObjectValue(componentType, (Map<String, Node<?>>) node.getValue());
-                    result.add(objectValue);
-                } else if (isCollectionTypeOrArray(componentType)) {
-                    Object collectionTypeValue = createCollectionTypeValue(componentType, (List<Node<?>>) node.getValue());
-                    result.add(collectionTypeValue);
+                    temporaryDataHolder.add(objectValue);
+                } else if (componentType.isArray()) {
+                    Object collectionTypeValue = createCollectionTypeValue(componentType, (List<Node<?>>) node.getValue(), field);
+                    temporaryDataHolder.add(collectionTypeValue);
                 }
             }
 
             if (classType.isArray()) {
-                return result.toArray();
-            } else if (isCollection(classType)) {
-                Collection<Object> collection = (Collection<Object>) classType.getDeclaredConstructor().newInstance();
-                collection.addAll(result);
-                return collection;
-            } else {
-                // todo: add support for Map data type
-                return Map.of();
+                Object resultArray = Array.newInstance(componentType, temporaryDataHolder.size());
+
+                for (int i=0; i < temporaryDataHolder.size(); i++) {
+                    Array.set(resultArray, i, temporaryDataHolder.get(i));
+                }
+
+                return resultArray;
+            } else if (isCollectionFramework(classType)) {
+                Collection<Object> result = null;
+                if (List.class.isAssignableFrom(classType)) {
+                    result = new ArrayList<>();
+                } else if (Set.class.isAssignableFrom(classType)) {
+                    result = new HashSet<>();
+                } else if (Queue.class.isAssignableFrom(classType)) {
+                    result = new PriorityQueue<>();
+                }
+
+                if (result == null) {
+                    throw new JsonParseException("No appropriate collection type found for field: " + field.getName());
+                }
+
+                result.addAll(temporaryDataHolder);
+                return result;
             }
         } catch (Exception e) {
             throw new JsonParseException(e);
         }
+
+        return null;
     }
 
     public static Object createPrimitiveValue(TokenType tokenType, Class<?> classType, String value) {

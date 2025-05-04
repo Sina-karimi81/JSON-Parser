@@ -1,6 +1,8 @@
 package semantic;
 
 
+import annotations.ElementType;
+import data.TypeMismatchInput;
 import exception.JsonParseException;
 import lexer.Lexer;
 import parser.Parser;
@@ -11,9 +13,7 @@ import parser.nodes.PrimitiveNode;
 import token.TokenType;
 import util.TypeUtils;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 
 public class SemanticAnalyzer {
@@ -38,7 +38,7 @@ public class SemanticAnalyzer {
                 fieldByName.setAccessible(true);
 
                 Node<?> value = entry.getValue();
-                typeMismatch(fieldByName.getName(), fieldByName.getType(), value);
+                typeMismatch(new TypeMismatchInput(fieldByName, fieldByName.getName(), fieldByName.getType(), value));
 
                 TypeUtils.setFieldValue(value, fieldByName, targetObject);
             }
@@ -59,63 +59,57 @@ public class SemanticAnalyzer {
         return null;
     }
 
-    private void typeMismatch(String name, Class<?> typeClazz, Node<?> node) throws JsonParseException {
-        if (node instanceof PrimitiveNode primitiveNode && TypeUtils.isPrimitiveOrPrimitiveWrapperOrString(typeClazz)) {
+    private void typeMismatch(TypeMismatchInput input) throws JsonParseException {
+        if (input.node() instanceof PrimitiveNode primitiveNode && TypeUtils.isPrimitiveOrPrimitiveWrapperOrString(input.clazz())) {
             boolean matched = false;
             TokenType tokenType = primitiveNode.getType();
 
             for (Class<?> cls: tokenType.getAllowedClasses()) {
-                if (cls.equals(typeClazz)) {
+                if (cls.equals(input.clazz())) {
                     matched = true;
                     break;
                 }
             }
 
             if (!matched) {
-                String format = String.format("field %s with type %s did not match the type provided in JSON which is %s", name, typeClazz, tokenType.name());
+                String format = String.format("field %s with type %s did not match the type provided in JSON which is %s", input.name(), input.clazz(), tokenType.name());
                 throw new JsonParseException(format, null);
             }
         }
 
-        if (node instanceof ArrayNode arrayNode) {
+        if (input.node() instanceof ArrayNode arrayNode) {
             List<Node<?>> values = arrayNode.getValue();
 
-            if (!TypeUtils.isCollectionTypeOrArray(typeClazz)) {
-                String format = String.format("field %s with type %s did not match the type provided in JSON which is %s", name, typeClazz, arrayNode.getType().name());
+            if (!TypeUtils.isCollectionTypeOrArray(input.clazz())) {
+                String format = String.format("field %s with type %s did not match the type provided in JSON which is %s", input.name(), input.clazz(), arrayNode.getType().name());
                 throw new JsonParseException(format, null);
             }
 
-            if (typeClazz.isArray()) {
+            if (input.clazz().isArray()) {
                 for (int i=0; i < values.size(); i++) {
-                    typeMismatch(name + "[" + i + "]", typeClazz.getComponentType(), values.get(i));
+                    typeMismatch(new TypeMismatchInput(input.field(), input.name() + "[" + i + "]", input.clazz().getComponentType(), values.get(i)));
                 }
             }
 
-            if (TypeUtils.isCollectionFramework(typeClazz)) {
-                Type[] genericInterfaces = typeClazz.getGenericInterfaces();
-                if (genericInterfaces[0] instanceof ParameterizedType parameterizedType) {
-                    Class<?> componentTypeClass = null;
-                    try {
-                        componentTypeClass = Class.forName(parameterizedType.getActualTypeArguments()[0].getTypeName());
-                    } catch (ClassNotFoundException e) {
-                        throw new JsonParseException(e);
-                    }
+            if (TypeUtils.isCollectionFramework(input.clazz())) {
+                ElementType annotation = input.field().getAnnotation(ElementType.class);
+                if (annotation != null) {
                     for (int i=0; i < values.size(); i++) {
-                        typeMismatch(name + "[" + i + "]", componentTypeClass, values.get(i));
+                        typeMismatch(new TypeMismatchInput(input.field(), input.name() + "[" + i + "]", annotation.clazz(), values.get(i)));
                     }
                 }
             }
         }
 
-        if (node instanceof ObjectNode objectNode) {
+        if (input.node() instanceof ObjectNode objectNode) {
             Map<String, Node<?>> objectNodeValue = objectNode.getValue();
 
-            if (!TypeUtils.isObject(typeClazz)) {
-                String format = String.format("field %s with type %s did not match the type provided in JSON which is %s", name, typeClazz, objectNode.getType().name());
+            if (!TypeUtils.isObject(input.clazz())) {
+                String format = String.format("field %s with type %s did not match the type provided in JSON which is %s", input.name(), input.clazz(), objectNode.getType().name());
                 throw new JsonParseException(format, null);
             }
 
-            Field[] declaredFields = typeClazz.getDeclaredFields();
+            Field[] declaredFields = input.clazz().getDeclaredFields();
             for (Map.Entry<String, Node<?>> entry :objectNodeValue.entrySet()) {
                 Field fieldByName = getFieldByName(declaredFields, entry.getKey());
 
@@ -123,7 +117,7 @@ public class SemanticAnalyzer {
                     throw new JsonParseException(createNonExistentFieldErrorMessage(entry.getKey()), null);
                 }
 
-                typeMismatch(fieldByName.getName(), fieldByName.getType(), entry.getValue());
+                typeMismatch(new TypeMismatchInput(null, fieldByName.getName(), fieldByName.getType(), entry.getValue()));
             }
         }
     }

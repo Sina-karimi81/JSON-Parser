@@ -1,7 +1,7 @@
 import TestObjects.*;
-import TestObjects.ultimate.Product;
-import TestObjects.ultimate.QueryResult;
-import TestObjects.ultimate.TestObject;
+import TestObjects.pojo.Product;
+import TestObjects.pojo.QueryResult;
+import TestObjects.pojo.TestObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -225,7 +225,7 @@ public class JsonMapperMarshallingTest {
     @Test
     public void testObject2JsonConversion() throws JsonProcessingException {
         Product product = new Product("test1", 5.43f);
-        QueryResult result = new QueryResult(List.of("ps5", "xbox", "nintendo"), 3);
+        QueryResult result = new QueryResult(List.of("ps5", "xbox", "nintendo"), null, 3);
 
         TestObject testObject = new TestObject(result, product, new Date());
         String expected = mapper.writeValueAsString(testObject);
