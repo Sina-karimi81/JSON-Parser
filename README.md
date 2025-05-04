@@ -72,7 +72,6 @@ and the value being the actual Node that contains the data
 
 #### Semantic Analyzer
 Ahh my white whale, This was the part that got to me. you can check [SemanticAnalyzer](src/main/java/semantic/SemanticAnalyzer.java) class for the code. I tried to validate the type that was in the JSON with the actual type that was in the object and after the types matched populate the field with the value provided, And it mostly went well _until_ I decided to deserialize
-**collections**. As you, the well educated audience, might know, Java's generics system was designed to be backward compatible, So the actual datatype gets earsed in the runtime which is called [Type Erasure](https://www.baeldung.com/java-type-erasure). So I couldn't access the actual type that was stored in the generic type and no matter how many times I searched and 
-how many solutions I tried, I couldn't make it work.
+**collections**. As you, the well educated audience, might know, Java's generics system was designed to be backward compatible, So the actual datatype gets earsed in the runtime which is called [Type Erasure](https://www.baeldung.com/java-type-erasure). So I couldn't access the actual type that was stored in the generic type and no matter how many times I searched and how many solutions I tried, I couldn't make it work. Until I found the solution: **Annotations**. I created an annotation that is put on top of generic fields and specifies the element type and I check for it in the code.
 
-Finally, I got tired and pushed the project to Github. I have created [issues](https://github.com/Sina-karimi81/JSON-Parser/issues) and if you know anything I'd appreciate it if you could leave a comment or even fix it :))
+you can check the [issues](https://github.com/Sina-karimi81/JSON-Parser/issues) if you want to help. you can also create a pull request and I will check. thank you :))
