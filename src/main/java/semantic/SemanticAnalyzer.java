@@ -1,10 +1,10 @@
 package semantic;
 
 
-import annotations.ElementType;
 import data.TypeMismatchInput;
 import exception.JsonParseException;
 import lexer.Lexer;
+import lombok.SneakyThrows;
 import parser.Parser;
 import parser.nodes.ArrayNode;
 import parser.nodes.Node;
@@ -59,6 +59,7 @@ public class SemanticAnalyzer {
         return null;
     }
 
+    @SneakyThrows(ClassNotFoundException.class)
     private void typeMismatch(TypeMismatchInput input) throws JsonParseException {
         if (input.node() instanceof PrimitiveNode primitiveNode && TypeUtils.isPrimitiveOrPrimitiveWrapperOrString(input.clazz())) {
             boolean matched = false;
@@ -92,11 +93,11 @@ public class SemanticAnalyzer {
             }
 
             if (TypeUtils.isCollectionFramework(input.clazz())) {
-                ElementType annotation = input.field().getAnnotation(ElementType.class);
-                if (annotation != null) {
-                    for (int i=0; i < values.size(); i++) {
-                        typeMismatch(new TypeMismatchInput(input.field(), input.name() + "[" + i + "]", annotation.clazz(), values.get(i)));
-                    }
+                ParameterizedType parameterizedType = (ParameterizedType) input.field().getGenericType();
+                for (int i=0; i < values.size(); i++) {
+                    Type actualTypeArgument = parameterizedType.getActualTypeArguments()[0];
+                    Class<?> aClass = Class.forName(actualTypeArgument.getTypeName());
+                    typeMismatch(new TypeMismatchInput(input.field(), input.name() + "[" + i + "]", aClass, values.get(i)));
                 }
             }
         }
